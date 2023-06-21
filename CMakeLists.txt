@@ -38,6 +38,7 @@ set(VSB2_SOURCES
     src/vsb2/graphics/instance.c
     src/vsb2/graphics/renderpass.c
     src/vsb2/graphics/swapchain.c
+    src/vsb2/graphics/sync.c
     src/vsb2/graphics/window.c
     src/vsb2/engine.c
     src/vsb2/error.c

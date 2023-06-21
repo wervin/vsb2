@@ -36,4 +36,6 @@ enum vsb2_error vsb2_graphics_device_init(
 
 void vsb2_graphics_device_destroy(struct vsb2_graphics_device *device);
 
+void vsb2_graphics_device_wait_idle(struct vsb2_graphics_device *device);
+
 #endif /* VSB2_GRAPHICS_DEVICE_H */

@@ -39,6 +39,11 @@ void vsb2_graphics_device_destroy(struct vsb2_graphics_device *device)
     vkDestroyDevice(device->vk_device, NULL);
 }
 
+void vsb2_graphics_device_wait_idle(struct vsb2_graphics_device *device)
+{
+    vkDeviceWaitIdle(device->vk_device);
+}
+
 static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_graphics_device_info *info)
 {
     int32_t graphics_queue, present_queue;
