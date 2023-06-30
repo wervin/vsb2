@@ -22,10 +22,14 @@ enum vsb2_error vsb2_engine_init(struct vsb2_engine *engine, struct vsb2_engine_
 
 void vsb2_engine_cleanup(struct vsb2_engine *engine)
 {
+    vsb2_graphics_shader_destroy(&engine->vertex_shader, &engine->device);
+    vsb2_graphics_shader_destroy(&engine->frag_shader, &engine->device);
     vsb2_graphics_device_wait_idle(&engine->device);
     vsb2_graphics_sync_destroy(&engine->sync, &engine->device);
     vsb2_graphics_commandbuffer_destroy(&engine->commandbuffer, &engine->device, &engine->commandpool);
     vsb2_graphics_commandpool_destroy(&engine->commandpool, &engine->device);
+    vsb2_graphics_pipeline_destroy(&engine->pipeline, &engine->device);
+    vsb2_graphics_pipelinelayout_destroy(&engine->pipelinelayout, &engine->device);
     vsb2_graphics_framebuffers_destroy(&engine->framebuffers, &engine->device);
     vsb2_graphics_renderpass_destroy(&engine->renderpass, &engine->device);
     vsb2_graphics_swapchain_destroy(&engine->swapchain, &engine->device);
@@ -116,6 +120,8 @@ static enum vsb2_error _draw(struct vsb2_engine *engine)
     vkCmdBeginRenderPass(engine->commandbuffer.vk_commandbuffer, &renderpassbegin_info, VK_SUBPASS_CONTENTS_INLINE);
 
     // once we start adding rendering commands, they will go here
+    vkCmdBindPipeline(engine->commandbuffer.vk_commandbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, engine->pipeline.vk_pipeline);
+    vkCmdDraw(engine->commandbuffer.vk_commandbuffer, 3, 1, 0, 0);
 
     // finalize the render pass
     vkCmdEndRenderPass(engine->commandbuffer.vk_commandbuffer);
@@ -223,6 +229,29 @@ static enum vsb2_error _graphics_init(struct vsb2_engine *engine, struct vsb2_en
         return status;
 
     status = vsb2_graphics_sync_init(&engine->sync, &engine->device);
+    if (status != VSB2_ERROR_NONE)
+        return status;
+
+    status = vsb2_graphics_shader_init(&engine->vertex_shader, &engine->device, &info->vertex_shader_info);
+    if (status != VSB2_ERROR_NONE)
+        return status;
+
+    status = vsb2_graphics_shader_init(&engine->frag_shader, &engine->device, &info->frag_shader_info);
+    if (status != VSB2_ERROR_NONE)
+        return status;
+
+    status = vsb2_graphics_pipelinelayout_init(&engine->pipelinelayout, &engine->device);
+    if (status != VSB2_ERROR_NONE)
+        return status;
+
+    status = vsb2_graphics_pipeline_init(
+        &engine->pipeline, 
+        &engine->device,
+        &engine->window,
+        &engine->renderpass,
+        &engine->pipelinelayout, 
+        &engine->vertex_shader, 
+        &engine->frag_shader);
     if (status != VSB2_ERROR_NONE)
         return status;
 

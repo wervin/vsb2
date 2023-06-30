@@ -36,7 +36,10 @@ set(VSB2_SOURCES
     src/vsb2/graphics/device.c
     src/vsb2/graphics/framebuffers.c
     src/vsb2/graphics/instance.c
+    src/vsb2/graphics/pipeline.c
+    src/vsb2/graphics/pipelinelayout.c
     src/vsb2/graphics/renderpass.c
+    src/vsb2/graphics/shader.c
     src/vsb2/graphics/swapchain.c
     src/vsb2/graphics/sync.c
     src/vsb2/graphics/window.c
@@ -62,13 +65,13 @@ set_property(TARGET vsb2 PROPERTY C_STANDARD 11)
 target_compile_options(vsb2 PRIVATE 
     -Wall -Wextra -Wpedantic)
 
-# add_custom_target(vert.spv
-#     COMMAND glslangValidator --quiet -V ${CMAKE_SOURCE_DIR}/shaders/shader.vert -o ${CMAKE_BINARY_DIR}/vert.spv)
+add_custom_target(triangle.vert.spv
+    COMMAND glslangValidator --quiet -V ${CMAKE_SOURCE_DIR}/shaders/triangle.vert -o ${CMAKE_BINARY_DIR}/triangle.vert.spv)
 
-# add_custom_target(frag.spv
-#     COMMAND glslangValidator --quiet -V ${CMAKE_SOURCE_DIR}/shaders/shader.frag -o ${CMAKE_BINARY_DIR}/frag.spv)
+add_custom_target(triangle.frag.spv
+    COMMAND glslangValidator --quiet -V ${CMAKE_SOURCE_DIR}/shaders/triangle.frag -o ${CMAKE_BINARY_DIR}/triangle.frag.spv)
 
-# add_dependencies(vsb2
-#     vert.spv
-#     frag.spv)
+add_dependencies(vsb2
+    triangle.vert.spv
+    triangle.frag.spv)
 

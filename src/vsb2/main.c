@@ -2,6 +2,8 @@
 
 int main(void)
 {
+    enum vsb2_error status = VSB2_ERROR_NONE;
+
     struct vsb2_engine_info info = {
         .window_info = {
             .default_width = 800,
@@ -44,14 +46,26 @@ int main(void)
         .renderpass_info = {
             .format = VK_FORMAT_B8G8R8A8_SRGB,
             .sample_count = VK_SAMPLE_COUNT_1_BIT
+        },
+        .vertex_shader_info = {
+            .path = "triangle.vert.spv"
+        },
+        .frag_shader_info = {
+            .path = "triangle.frag.spv"
         }
     };
 
     struct vsb2_engine engine = {0};
 
-    vsb2_engine_init(&engine, &info);
-    vsb2_engine_run(&engine);
-    vsb2_engine_cleanup(&engine);
+    status = vsb2_engine_init(&engine, &info);
+    if (status != VSB2_ERROR_NONE)
+        goto cleanup;
 
-    return 0;
+    status = vsb2_engine_run(&engine);
+    if (status != VSB2_ERROR_NONE)
+        goto cleanup;
+
+cleanup:
+    vsb2_engine_cleanup(&engine);
+    return status;
 }
