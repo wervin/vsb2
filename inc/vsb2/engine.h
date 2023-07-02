@@ -18,8 +18,25 @@
 
 struct vsb2_engine_info
 {
-    struct vsb2_graphics_window_info window_info;
+    uint32_t default_width;
+    uint32_t default_height;
+
+    const char *application_name;
+    uint32_t application_version_major;
+    uint32_t application_version_minor;
+    uint32_t application_version_revision;
+
+    const char *engine_name;
+    uint32_t engine_version_major;
+    uint32_t engine_version_minor;
+    uint32_t engine_version_revision;
+
+    uint32_t max_frames_in_flight;
+
+#ifndef NDEBUG
     struct vsb2_graphics_instance_info instance_info;
+#endif
+
     struct vsb2_graphics_device_info device_info;
     struct vsb2_graphics_swapchain_info swapchain_info;
     struct vsb2_graphics_renderpass_info renderpass_info;
@@ -29,6 +46,8 @@ struct vsb2_engine_info
 
 struct vsb2_engine
 {   
+    uint32_t max_frames_in_flight;
+    
     struct vsb2_graphics_window window;
     struct vsb2_graphics_instance instance;
     struct vsb2_graphics_device device;

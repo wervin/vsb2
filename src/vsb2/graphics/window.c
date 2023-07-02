@@ -1,12 +1,13 @@
 #include "vsb2/graphics/window.h"
 
+#include "vsb2/engine.h"
 #include "vsb2/log.h"
 
 #include "sake_macro.h"
 
 static void _glfw_resize_cb(GLFWwindow *glfw_window, int width, int height);
 
-enum vsb2_error vsb2_graphics_window_init(struct vsb2_graphics_window *window, struct vsb2_graphics_window_info *info)
+enum vsb2_error vsb2_graphics_window_init(struct vsb2_graphics_window *window, struct vsb2_engine_info *info)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

@@ -18,7 +18,6 @@ struct vsb2_graphics_pipeline
 
 enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipeline,
                                             struct vsb2_graphics_device *device,
-                                            struct vsb2_graphics_window *window,
                                             struct vsb2_graphics_renderpass *renderpass,
                                             struct vsb2_graphics_pipelinelayout *pipelinelayout,
                                             struct vsb2_graphics_shader *vertex_shader,

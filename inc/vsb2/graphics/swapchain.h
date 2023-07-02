@@ -10,6 +10,7 @@
 struct vsb2_graphics_window;
 struct vsb2_graphics_instance;
 struct vsb2_graphics_device;
+struct vsb2_engine_info;
 
 struct vsb2_graphics_swapchain_info
 {
@@ -39,7 +40,7 @@ enum vsb2_error vsb2_graphics_swapchain_init(
     struct vsb2_graphics_window *window,
     struct vsb2_graphics_instance *instance,
     struct vsb2_graphics_device *device,
-    struct vsb2_graphics_swapchain_info *info);
+    struct vsb2_engine_info *info);
 
 void vsb2_graphics_swapchain_destroy(
     struct vsb2_graphics_swapchain *swapchain,

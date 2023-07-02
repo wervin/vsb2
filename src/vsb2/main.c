@@ -5,32 +5,32 @@ int main(void)
     enum vsb2_error status = VSB2_ERROR_NONE;
 
     struct vsb2_engine_info info = {
-        .window_info = {
-            .default_width = 800,
-            .default_height = 600,
-            .application_name = "First Application",
-            .application_version_major = 1,
-            .application_version_minor = 0,
-            .application_version_revision = 0
-        },
+        .default_width = 800,
+        .default_height = 600,
+
+        .application_name = "First Application",
+        .application_version_major = 1,
+        .application_version_minor = 0,
+        .application_version_revision = 0,
+
+        .engine_name = "VSB2",
+        .engine_version_major = 1,
+        .engine_version_minor = 0,
+        .engine_version_revision = 0,
+
+        .max_frames_in_flight = 2,
+
+#ifndef NDEBUG
         .instance_info = {
-            .application_name = "First Application",
-            .application_version_major = 1,
-            .application_version_minor = 0,
-            .application_version_revision = 0,
-            .engine_name = "VSB2",
-            .engine_version_major = 1,
-            .engine_version_minor = 0,
-            .engine_version_revision = 0,
             .validation_layers = (const char *[]) {"VK_LAYER_KHRONOS_validation"},
-            .debug_extensions = (const char *[]) {"VK_EXT_debug_utils"}
+            .debug_extensions = (const char *[]) {"VK_EXT_debug_utils"},
         },
+#endif
         .device_info = {
             .features_requested = {
-                .samplerAnisotropy = VK_TRUE
+                .samplerAnisotropy = VK_TRUE,
             },
             .device_extensions = (const char *[]) {"VK_KHR_swapchain"},
-            .validation_layers = (const char *[]) {"VK_LAYER_KHRONOS_validation"}
         },
         .swapchain_info = {
             .array_layer_count = 1,

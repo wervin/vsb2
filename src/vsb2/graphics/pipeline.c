@@ -9,7 +9,6 @@
 
 enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipeline,
                                             struct vsb2_graphics_device *device,
-                                            struct vsb2_graphics_window *window,
                                             struct vsb2_graphics_renderpass *renderpass,
                                             struct vsb2_graphics_pipelinelayout *pipelinelayout,
                                             struct vsb2_graphics_shader *vertex_shader,
@@ -36,17 +35,24 @@ enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipel
     input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly_info.primitiveRestartEnable = VK_FALSE;
 
-    VkViewport viewport = {0};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float) window->width;
-    viewport.height = (float) window->height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+    VkPipelineViewportStateCreateInfo viewportstate_info = {0};
+    viewportstate_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportstate_info.viewportCount = 1;
+    viewportstate_info.pViewports = NULL;
+    viewportstate_info.scissorCount = 1;
+    viewportstate_info.pScissors = NULL;
 
-    VkRect2D scissor = {0};
-    scissor.offset = (VkOffset2D) { .x=0, .y=0 };
-    scissor.extent = (VkExtent2D) { .height=window->height, .width=window->width };
+    // VkViewport viewport = {0};
+    // viewport.x = 0.0f;
+    // viewport.y = 0.0f;
+    // viewport.width = (float) window->width;
+    // viewport.height = (float) window->height;
+    // viewport.minDepth = 0.0f;
+    // viewport.maxDepth = 1.0f;
+
+    // VkRect2D scissor = {0};
+    // scissor.offset = (VkOffset2D) { .x=0, .y=0 };
+    // scissor.extent = (VkExtent2D) { .height=window->height, .width=window->width };
 
     VkPipelineRasterizationStateCreateInfo rasterization_info = {0};
     rasterization_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -57,42 +63,33 @@ enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipel
     rasterization_info.cullMode = VK_CULL_MODE_NONE;
     rasterization_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterization_info.depthBiasEnable = VK_FALSE;
-    rasterization_info.depthBiasConstantFactor = 0.0f;
-    rasterization_info.depthBiasClamp = 0.0f;
-    rasterization_info.depthBiasSlopeFactor = 0.0f;
 
     VkPipelineMultisampleStateCreateInfo multisampling_info = {0};
     multisampling_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling_info.sampleShadingEnable = VK_FALSE;
     multisampling_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    multisampling_info.minSampleShading = 1.0f;
-    multisampling_info.pSampleMask = NULL;
-    multisampling_info.alphaToCoverageEnable = VK_FALSE;
-    multisampling_info.alphaToOneEnable = VK_FALSE;
 
     VkPipelineColorBlendAttachmentState colorblend_attachment_info = {0};
     colorblend_attachment_info.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorblend_attachment_info.blendEnable = VK_FALSE;
 
-    VkPipelineViewportStateCreateInfo viewportstate_info = {0};
-    viewportstate_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportstate_info.pNext = NULL;
-    viewportstate_info.viewportCount = 1;
-    viewportstate_info.pViewports = &viewport;
-    viewportstate_info.scissorCount = 1;
-    viewportstate_info.pScissors = &scissor;
-
-    // setup dummy color blending. We arent using transparent objects yet
-    // the blending is just "no blend", but we do write to the color attachment
     VkPipelineColorBlendStateCreateInfo colorblending_info= {0};
     colorblending_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorblending_info.logicOpEnable = VK_FALSE;
     colorblending_info.logicOp = VK_LOGIC_OP_COPY;
     colorblending_info.attachmentCount = 1;
     colorblending_info.pAttachments = &colorblend_attachment_info;
+    colorblending_info.blendConstants[0] = 0.0f;
+    colorblending_info.blendConstants[1] = 0.0f;
+    colorblending_info.blendConstants[2] = 0.0f;
+    colorblending_info.blendConstants[3] = 0.0f;
 
-    // build the actual pipeline
-    // we now use all of the info structs we have been writing into into this one to create the pipeline
+    VkDynamicState dynamic_states[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dynamicstate_info = {0};
+    dynamicstate_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicstate_info.dynamicStateCount = 2;
+    dynamicstate_info.pDynamicStates = dynamic_states;
+
     VkGraphicsPipelineCreateInfo pipeline_info = {0};
     pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipeline_info.stageCount = 2;
@@ -103,6 +100,7 @@ enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipel
     pipeline_info.pRasterizationState = &rasterization_info;
     pipeline_info.pMultisampleState = &multisampling_info;
     pipeline_info.pColorBlendState = &colorblending_info;
+    pipeline_info.pDynamicState = &dynamicstate_info;
     pipeline_info.layout = pipelinelayout->vk_pipelinelayout;
     pipeline_info.renderPass = renderpass->vk_renderpass;
     pipeline_info.subpass = 0;

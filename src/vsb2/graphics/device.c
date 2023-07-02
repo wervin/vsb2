@@ -4,13 +4,14 @@
 #include "vsb2/graphics/device.h"
 #include "vsb2/graphics/instance.h"
 
+#include "vsb2/engine.h"
 #include "vsb2/log.h"
 
 #include "sake_macro.h"
 
-static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_graphics_device_info *info);
-static bool _is_physical_device_suitable(struct vsb2_graphics_instance *instance, VkPhysicalDevice vk_physical_device, struct vsb2_graphics_device_info *info);
-static enum vsb2_error _pick_physical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_graphics_device_info *info);
+static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info);
+static bool _is_physical_device_suitable(struct vsb2_graphics_instance *instance, VkPhysicalDevice vk_physical_device, struct vsb2_engine_info *info);
+static enum vsb2_error _pick_physical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info);
 static bool _check_device_extension_support(VkPhysicalDevice physical_device,
                                             const char **desired_extensions,
                                             uint32_t desired_extension_count);
@@ -18,7 +19,7 @@ static bool _supports_features(VkPhysicalDeviceFeatures supported, VkPhysicalDev
 static int32_t _get_graphics_queue_index(VkPhysicalDevice physical_device);
 static int32_t _get_present_queue_index(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
-enum vsb2_error vsb2_graphics_device_init(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_graphics_device_info *info)
+enum vsb2_error vsb2_graphics_device_init(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info)
 {   
     enum vsb2_error status;
 
@@ -44,7 +45,7 @@ void vsb2_graphics_device_wait_idle(struct vsb2_graphics_device *device)
     vkDeviceWaitIdle(device->vk_device);
 }
 
-static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_graphics_device_info *info)
+static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info)
 {
     int32_t graphics_queue, present_queue;
     graphics_queue = _get_graphics_queue_index(device->vk_physical_device);
@@ -67,15 +68,15 @@ static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *devic
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     create_info.queueCreateInfoCount = nb_queue;
     create_info.pQueueCreateInfos = (const VkDeviceQueueCreateInfo *) &vk_queue_create_info;
-    create_info.pEnabledFeatures = &info->features_requested;
-    create_info.enabledExtensionCount = sizeof(info->device_extensions) / sizeof(char*);
-    create_info.ppEnabledExtensionNames = info->device_extensions;
+    create_info.pEnabledFeatures = &info->device_info.features_requested;
+    create_info.enabledExtensionCount = sizeof(info->device_info.device_extensions) / sizeof(char*);
+    create_info.ppEnabledExtensionNames = info->device_info.device_extensions;
 
 #ifdef NDEBUG
     create_info.enabledLayerCount = 0;
 #else
-    create_info.enabledLayerCount = sizeof(info->validation_layers) / sizeof(char*);
-    create_info.ppEnabledLayerNames = info->validation_layers;
+    create_info.enabledLayerCount = sizeof(info->instance_info.validation_layers) / sizeof(char*);
+    create_info.ppEnabledLayerNames = info->instance_info.validation_layers;
 #endif
 
     if (vkCreateDevice(device->vk_physical_device, &create_info, NULL, &device->vk_device) != VK_SUCCESS)
@@ -92,7 +93,7 @@ static enum vsb2_error _create_logical_device(struct vsb2_graphics_device *devic
     return VSB2_ERROR_NONE;
 }
 
-static enum vsb2_error _pick_physical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_graphics_device_info *info)
+static enum vsb2_error _pick_physical_device(struct vsb2_graphics_device *device, struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info)
 {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(instance->vk_instance, &device_count, NULL);
@@ -127,7 +128,7 @@ static enum vsb2_error _pick_physical_device(struct vsb2_graphics_device *device
     return VSB2_ERROR_NONE;
 }
 
-static bool _is_physical_device_suitable(struct vsb2_graphics_instance *instance, VkPhysicalDevice vk_physical_device, struct vsb2_graphics_device_info *info) 
+static bool _is_physical_device_suitable(struct vsb2_graphics_instance *instance, VkPhysicalDevice vk_physical_device, struct vsb2_engine_info *info) 
 {
     if (_get_graphics_queue_index(vk_physical_device) < 0)
         return false;
@@ -135,7 +136,7 @@ static bool _is_physical_device_suitable(struct vsb2_graphics_instance *instance
     if (_get_present_queue_index(vk_physical_device, instance->vk_surface) < 0)
         return false;
 
-    if (!_check_device_extension_support(vk_physical_device, info->device_extensions, sizeof(info->device_extensions) / sizeof(char*)))
+    if (!_check_device_extension_support(vk_physical_device, info->device_info.device_extensions, sizeof(info->device_info.device_extensions) / sizeof(char*)))
         return false;
 
     uint32_t format_count;
@@ -150,7 +151,7 @@ static bool _is_physical_device_suitable(struct vsb2_graphics_instance *instance
 
     VkPhysicalDeviceFeatures supported;
     vkGetPhysicalDeviceFeatures(vk_physical_device, &supported);
-    if (!_supports_features(supported, info->features_requested))
+    if (!_supports_features(supported, info->device_info.features_requested))
         return false;
 
     return true;

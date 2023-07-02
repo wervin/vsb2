@@ -4,15 +4,16 @@
 #include "vsb2/graphics/instance.h"
 #include "vsb2/graphics/window.h"
 
+#include "vsb2/engine.h"
 #include "vsb2/log.h"
 
 #include "sake_macro.h"
 
 static enum vsb2_error _create_renderpass(struct vsb2_graphics_renderpass *renderpass, struct vsb2_graphics_device *device, 
-    struct vsb2_graphics_renderpass_info *info);
+    struct vsb2_engine_info *info);
 
 enum vsb2_error vsb2_graphics_renderpass_init(struct vsb2_graphics_renderpass *renderpass, struct vsb2_graphics_device *device,
-    struct vsb2_graphics_renderpass_info *info)
+    struct vsb2_engine_info *info)
 {
     enum vsb2_error status;
 
@@ -30,11 +31,11 @@ void vsb2_graphics_renderpass_destroy(struct vsb2_graphics_renderpass *renderpas
 }
 
 static enum vsb2_error _create_renderpass(struct vsb2_graphics_renderpass *renderpass, struct vsb2_graphics_device *device, 
-    struct vsb2_graphics_renderpass_info *info)
+    struct vsb2_engine_info *info)
 {
     VkAttachmentDescription color_attachment = {0};
-    color_attachment.format = info->format;
-    color_attachment.samples = info->sample_count;
+    color_attachment.format = info->renderpass_info.format;
+    color_attachment.samples = info->renderpass_info.sample_count;
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -67,7 +68,6 @@ static enum vsb2_error _create_renderpass(struct vsb2_graphics_renderpass *rende
     render_pass_info.pSubpasses = &subpass;
     render_pass_info.dependencyCount = 1;
     render_pass_info.pDependencies = &dependency;
-
     if (vkCreateRenderPass(device->vk_device, &render_pass_info, NULL, &renderpass->vk_renderpass) != VK_SUCCESS)
     {
         VSB2_LOG_ERROR(VSB2_ERROR_VK, "Failed to create render pass");

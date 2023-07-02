@@ -1,11 +1,12 @@
 #include "vsb2/graphics/instance.h"
 #include "vsb2/graphics/window.h"
 
+#include "vsb2/engine.h"
 #include "vsb2/log.h"
 
 #include "sake_macro.h"
 
-static enum vsb2_error _create_instance(struct vsb2_graphics_instance *instance, struct vsb2_graphics_instance_info *info);
+static enum vsb2_error _create_instance(struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info);
 static enum vsb2_error _create_surface(struct vsb2_graphics_instance *instance, struct vsb2_graphics_window *window);
 
 #ifndef NDEBUG
@@ -20,7 +21,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL _debug_callback(
 enum vsb2_error vsb2_graphics_instance_init(
     struct vsb2_graphics_instance *instance,
     struct vsb2_graphics_window *window,
-    struct vsb2_graphics_instance_info *info)
+    struct vsb2_engine_info *info)
 {
     enum vsb2_error status;
 
@@ -52,7 +53,7 @@ void vsb2_graphics_instance_destroy(struct vsb2_graphics_instance *instance)
     vkDestroyInstance(instance->vk_instance, NULL);
 }
 
-static enum vsb2_error _create_instance(struct vsb2_graphics_instance *instance, struct vsb2_graphics_instance_info *info)
+static enum vsb2_error _create_instance(struct vsb2_graphics_instance *instance, struct vsb2_engine_info *info)
 {
     VkApplicationInfo vk_app_info = {0};
     vk_app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -75,17 +76,17 @@ static enum vsb2_error _create_instance(struct vsb2_graphics_instance *instance,
     create_info.ppEnabledExtensionNames = glfw_extensions;
     create_info.enabledLayerCount = 0;
 #else 
-    uint32_t all_extension_count = glfw_extension_count + sizeof(info->debug_extensions) / sizeof(char*);
+    uint32_t all_extension_count = glfw_extension_count + sizeof(info->instance_info.debug_extensions) / sizeof(char*);
     const char* all_extensions[all_extension_count];
     for (uint32_t i = 0; i < glfw_extension_count; i++)
         all_extensions[i] = glfw_extensions[i];
-    for (uint32_t i = 0; i < sizeof(info->debug_extensions) / sizeof(char*); i++)
-        all_extensions[glfw_extension_count + i] = info->debug_extensions[i];
+    for (uint32_t i = 0; i < sizeof(info->instance_info.debug_extensions) / sizeof(char*); i++)
+        all_extensions[glfw_extension_count + i] = info->instance_info.debug_extensions[i];
 
     create_info.enabledExtensionCount = all_extension_count;
     create_info.ppEnabledExtensionNames = (const char **) all_extensions;
-    create_info.enabledLayerCount = sizeof(info->validation_layers) / sizeof(char*);
-    create_info.ppEnabledLayerNames = info->validation_layers;
+    create_info.enabledLayerCount = sizeof(info->instance_info.validation_layers) / sizeof(char*);
+    create_info.ppEnabledLayerNames = info->instance_info.validation_layers;
 
     VkDebugUtilsMessengerCreateInfoEXT debug_create_info = {0};
     debug_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;

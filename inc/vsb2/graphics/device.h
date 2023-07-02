@@ -8,14 +8,12 @@
 #include "vsb2/error.h"
 
 struct vsb2_graphics_instance;
+struct vsb2_engine_info;
 
 struct vsb2_graphics_device_info
 {
   VkPhysicalDeviceFeatures features_requested;
   const char** device_extensions;
-#ifndef NDEBUG
-  const char** validation_layers;
-#endif
 };
 
 struct vsb2_graphics_device
@@ -32,7 +30,7 @@ struct vsb2_graphics_device
 enum vsb2_error vsb2_graphics_device_init(
     struct vsb2_graphics_device *device,
     struct vsb2_graphics_instance *instance,
-    struct vsb2_graphics_device_info *info);
+    struct vsb2_engine_info *info);
 
 void vsb2_graphics_device_destroy(struct vsb2_graphics_device *device);
 
