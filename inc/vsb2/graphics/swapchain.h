@@ -27,9 +27,8 @@ struct vsb2_graphics_swapchain_info
 
 struct vsb2_graphics_swapchain
 {
-  VkSwapchainKHR* current_swapchain;
-  VkSwapchainKHR vk_swapchain1;
-  VkSwapchainKHR vk_swapchain2;
+  VkSwapchainKHR vk_swapchain;
+  VkExtent2D vk_extent;
   VkImage* vk_images;
   VkImageView* vk_image_views;
   uint32_t image_count;
@@ -37,6 +36,7 @@ struct vsb2_graphics_swapchain
 
 enum vsb2_error vsb2_graphics_swapchain_init(
     struct vsb2_graphics_swapchain *swapchain,
+    struct vsb2_graphics_swapchain *old_swapchain,
     struct vsb2_graphics_window *window,
     struct vsb2_graphics_instance *instance,
     struct vsb2_graphics_device *device,

@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <math.h>
 
 #include "vsb2/graphics/swapchain.h"
 #include "vsb2/graphics/device.h"
@@ -12,8 +14,11 @@
 
 #include "sake_macro.h"
 
-static enum vsb2_error _create_swapchain(struct vsb2_graphics_swapchain *swapchain,  struct vsb2_graphics_window *window, struct vsb2_graphics_instance *instance, 
-  struct vsb2_graphics_device *device, struct vsb2_engine_info *info);
+static enum vsb2_error _create_swapchain(
+    struct vsb2_graphics_swapchain *swapchain,
+    struct vsb2_graphics_swapchain *old_swapchain,
+    struct vsb2_graphics_window *window, struct vsb2_graphics_instance *instance, 
+    struct vsb2_graphics_device *device, struct vsb2_engine_info *info);
 
 static bool _support_desired_surface_format(struct vsb2_graphics_instance *instance,
                                             struct vsb2_graphics_device *device,
@@ -27,16 +32,19 @@ static bool _support_desired_image_count(struct vsb2_graphics_instance *instance
 static bool _support_desired_array_layer_count(struct vsb2_graphics_instance *instance,
                                                struct vsb2_graphics_device *device,
                                                struct vsb2_engine_info *info);
-static bool _support_desired_extent(struct vsb2_graphics_instance *instance,
-                                    struct vsb2_graphics_device *device,
-                                    struct vsb2_graphics_window *window);
+static VkExtent2D _get_current_extent(struct vsb2_graphics_instance *instance,
+                                      struct vsb2_graphics_device *device,
+                                      struct vsb2_graphics_window *window);
 
-enum vsb2_error vsb2_graphics_swapchain_init(struct vsb2_graphics_swapchain *swapchain,  struct vsb2_graphics_window *window, struct vsb2_graphics_instance *instance, 
+enum vsb2_error vsb2_graphics_swapchain_init(
+    struct vsb2_graphics_swapchain *swapchain,
+    struct vsb2_graphics_swapchain *old_swapchain,
+    struct vsb2_graphics_window *window, struct vsb2_graphics_instance *instance, 
     struct vsb2_graphics_device *device, struct vsb2_engine_info *info)
 {
     enum vsb2_error status;
 
-    status = _create_swapchain(swapchain, window, instance, device, info);
+    status = _create_swapchain(swapchain, old_swapchain, window, instance, device, info);
     if (status != VSB2_ERROR_NONE) {
         return status;
     }
@@ -56,12 +64,14 @@ void vsb2_graphics_swapchain_destroy(struct vsb2_graphics_swapchain *swapchain, 
     if (swapchain->vk_images)
         free(swapchain->vk_images);
 
-    vkDestroySwapchainKHR(device->vk_device, swapchain->vk_swapchain1, NULL);
-    vkDestroySwapchainKHR(device->vk_device, swapchain->vk_swapchain2, NULL);
+    vkDestroySwapchainKHR(device->vk_device, swapchain->vk_swapchain, NULL);
 }
 
-static enum vsb2_error _create_swapchain(struct vsb2_graphics_swapchain *swapchain, struct vsb2_graphics_window *window, struct vsb2_graphics_instance *instance, 
-  struct vsb2_graphics_device *device, struct vsb2_engine_info *info)
+static enum vsb2_error _create_swapchain(
+    struct vsb2_graphics_swapchain *swapchain, 
+    struct vsb2_graphics_swapchain *old_swapchain,
+    struct vsb2_graphics_window *window, struct vsb2_graphics_instance *instance, 
+    struct vsb2_graphics_device *device, struct vsb2_engine_info *info)
 {
     if (!_support_desired_surface_format(instance, device, info))
     {
@@ -87,11 +97,7 @@ static enum vsb2_error _create_swapchain(struct vsb2_graphics_swapchain *swapcha
         return VSB2_ERROR_VK;
     }
 
-    if (!_support_desired_extent(instance, device, window))
-    {
-        VSB2_LOG_ERROR(VSB2_ERROR_VK, "No swapchain support for desired extent");
-        return VSB2_ERROR_VK;
-    }
+    swapchain->vk_extent = _get_current_extent(instance, device, window);
 
     VkSwapchainCreateInfoKHR swapchain_create_info = {0};
     swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -100,7 +106,7 @@ static enum vsb2_error _create_swapchain(struct vsb2_graphics_swapchain *swapcha
     swapchain_create_info.minImageCount = info->swapchain_info.image_count;
     swapchain_create_info.imageFormat = info->swapchain_info.vk_surface_format.format;
     swapchain_create_info.imageColorSpace = info->swapchain_info.vk_surface_format.colorSpace;
-    swapchain_create_info.imageExtent = (VkExtent2D) { .height=window->height, .width=window->width };
+    swapchain_create_info.imageExtent = swapchain->vk_extent;
     swapchain_create_info.imageArrayLayers = info->swapchain_info.array_layer_count;
     swapchain_create_info.imageUsage = info->swapchain_info.image_usage_flags;
 
@@ -119,27 +125,17 @@ static enum vsb2_error _create_swapchain(struct vsb2_graphics_swapchain *swapcha
                                               &capabilities);
 
     swapchain_create_info.preTransform = info->swapchain_info.transform ? info->swapchain_info.transform : capabilities.currentTransform;
-	swapchain_create_info.compositeAlpha = info->swapchain_info.composite_alpha;
-	swapchain_create_info.presentMode = info->swapchain_info.vk_present_mode;
-	swapchain_create_info.clipped = info->swapchain_info.clipped;
-
-    if (!swapchain->vk_swapchain1 && !swapchain->vk_swapchain2)
-    {
-        swapchain_create_info.oldSwapchain = NULL;
-        swapchain->current_swapchain = &swapchain->vk_swapchain1;
-    }
-    else {
-        swapchain_create_info.oldSwapchain = swapchain->current_swapchain == &swapchain->vk_swapchain1 ? swapchain->vk_swapchain1 : swapchain->vk_swapchain2;
-        swapchain->current_swapchain = swapchain->current_swapchain == &swapchain->vk_swapchain1 ? &swapchain->vk_swapchain2 : &swapchain->vk_swapchain1;
-    }
-
-    if (vkCreateSwapchainKHR(device->vk_device, &swapchain_create_info, NULL, swapchain->current_swapchain) != VK_SUCCESS)
+    swapchain_create_info.compositeAlpha = info->swapchain_info.composite_alpha;
+    swapchain_create_info.presentMode = info->swapchain_info.vk_present_mode;
+    swapchain_create_info.clipped = info->swapchain_info.clipped;
+    swapchain_create_info.oldSwapchain = old_swapchain ? old_swapchain->vk_swapchain : NULL;
+    if (vkCreateSwapchainKHR(device->vk_device, &swapchain_create_info, NULL, &swapchain->vk_swapchain) != VK_SUCCESS)
     {
         VSB2_LOG_ERROR(VSB2_ERROR_VK, "Failed to create swap chain");
         return VSB2_ERROR_VK;
     }
 
-    vkGetSwapchainImagesKHR(device->vk_device, *swapchain->current_swapchain, &swapchain->image_count, NULL);
+    vkGetSwapchainImagesKHR(device->vk_device, swapchain->vk_swapchain, &swapchain->image_count, NULL);
 
     swapchain->vk_images = malloc(swapchain->image_count * sizeof(VkImage));
     if (swapchain->vk_images == NULL) {
@@ -147,7 +143,7 @@ static enum vsb2_error _create_swapchain(struct vsb2_graphics_swapchain *swapcha
         return VSB2_ERROR_MEMORY;
     }
 
-    vkGetSwapchainImagesKHR(device->vk_device, *swapchain->current_swapchain, &swapchain->image_count, swapchain->vk_images);
+    vkGetSwapchainImagesKHR(device->vk_device, swapchain->vk_swapchain, &swapchain->image_count, swapchain->vk_images);
 
     swapchain->vk_image_views = malloc(swapchain->image_count * sizeof(VkImageView));
     if (swapchain->vk_image_views == NULL) {
@@ -245,20 +241,28 @@ static bool _support_desired_image_count(struct vsb2_graphics_instance *instance
     return supported_max_image_count && supported_min_image_count;
 }
 
-static bool _support_desired_extent(struct vsb2_graphics_instance *instance,
-                                    struct vsb2_graphics_device *device,
-                                    struct vsb2_graphics_window *window)
+static VkExtent2D _get_current_extent(struct vsb2_graphics_instance *instance,
+                                      struct vsb2_graphics_device *device,
+                                      struct vsb2_graphics_window *window)
 {
     VkSurfaceCapabilitiesKHR capabilities;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device->vk_physical_device, 
                                               instance->vk_surface,
                                               &capabilities);
 
-    bool valid_width = capabilities.minImageExtent.width <= window->width &&
-                       capabilities.maxImageExtent.width >= window->width;
-    bool valid_height = capabilities.minImageExtent.height <= window->height &&
-                        capabilities.maxImageExtent.height >= window->height;
-    return valid_width && valid_height;
+    if (capabilities.currentExtent.width != UINT_MAX) 
+    {
+        return capabilities.currentExtent;
+    } 
+    else 
+    {
+        VkExtent2D extent = vsb2_graphics_window_get_extent(window);
+        extent.width = fmax(capabilities.minImageExtent.width,
+                                  fmin(capabilities.maxImageExtent.width, extent.width));
+        extent.height = fmax(capabilities.minImageExtent.height,
+                                   fmin(capabilities.maxImageExtent.height, extent.height));
+        return extent;
+    }
 }
 
 static bool _support_desired_array_layer_count(struct vsb2_graphics_instance *instance,

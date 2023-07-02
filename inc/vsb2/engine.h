@@ -45,13 +45,14 @@ struct vsb2_engine_info
 };
 
 struct vsb2_engine
-{   
-    uint32_t max_frames_in_flight;
-    
+{       
     struct vsb2_graphics_window window;
     struct vsb2_graphics_instance instance;
     struct vsb2_graphics_device device;
-    struct vsb2_graphics_swapchain swapchain;
+    struct vsb2_graphics_swapchain *current_swapchain;
+    struct vsb2_graphics_swapchain *old_swapchain;
+    struct vsb2_graphics_swapchain swapchain1;
+    struct vsb2_graphics_swapchain swapchain2;
     struct vsb2_graphics_renderpass renderpass;
     struct vsb2_graphics_framebuffers framebuffers;
     struct vsb2_graphics_commandpool commandpool;
@@ -64,7 +65,7 @@ struct vsb2_engine
 };
 
 enum vsb2_error vsb2_engine_init(struct vsb2_engine *engine, struct vsb2_engine_info *info);
+enum vsb2_error vsb2_engine_run(struct vsb2_engine *engine, struct vsb2_engine_info *info);
 void vsb2_engine_cleanup(struct vsb2_engine *engine);
-enum vsb2_error vsb2_engine_run(struct vsb2_engine *engine);
 
 #endif /* VSB2_ENGINE_H */

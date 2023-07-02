@@ -25,10 +25,16 @@ enum vsb2_error vsb2_graphics_window_init(struct vsb2_graphics_window *window, s
 
     glfwSetWindowUserPointer(window->glfw_window, window);
     glfwSetFramebufferSizeCallback(window->glfw_window, _glfw_resize_cb);
-    window->width = info->default_width;
-    window->height = info->default_height;
+    window->resized = false;
 
     return VSB2_ERROR_NONE;
+}
+
+VkExtent2D vsb2_graphics_window_get_extent(struct vsb2_graphics_window *window)
+{
+    int width, height;
+    glfwGetFramebufferSize(window->glfw_window, &width, &height);
+    return (VkExtent2D){.height = height, .width = width};
 }
 
 bool vsb2_graphics_window_should_close(struct vsb2_graphics_window *window)
@@ -36,10 +42,16 @@ bool vsb2_graphics_window_should_close(struct vsb2_graphics_window *window)
     return glfwWindowShouldClose(window->glfw_window);
 }
 
-void vsb2_graphics_window_poll_event(struct vsb2_graphics_window *window)
+void vsb2_graphics_window_poll_events(struct vsb2_graphics_window *window)
 {
     SAKE_MACRO_UNUSED(window);
     glfwPollEvents();
+}
+
+void vsb2_graphics_window_wait_events(struct vsb2_graphics_window *window)
+{
+    SAKE_MACRO_UNUSED(window);
+    glfwWaitEvents();
 }
 
 void vsb2_graphics_window_destroy(struct vsb2_graphics_window *window)
@@ -50,7 +62,8 @@ void vsb2_graphics_window_destroy(struct vsb2_graphics_window *window)
 
 static void _glfw_resize_cb(GLFWwindow *glfw_window, int width, int height)
 {
+    SAKE_MACRO_UNUSED(width);
+    SAKE_MACRO_UNUSED(height);
     struct vsb2_graphics_window *window = (struct vsb2_graphics_window *)glfwGetWindowUserPointer(glfw_window);
-    window->width = width;
-    window->height = height;
+    window->resized = true;
 }

@@ -21,7 +21,6 @@ struct vsb2_graphics_framebuffers
 
 enum vsb2_error vsb2_graphics_framebuffers_init(
     struct vsb2_graphics_framebuffers *framebuffers,
-    struct vsb2_graphics_window *window,
     struct vsb2_graphics_device *device,
     struct vsb2_graphics_swapchain *swapchain,
     struct vsb2_graphics_renderpass *renderpass);

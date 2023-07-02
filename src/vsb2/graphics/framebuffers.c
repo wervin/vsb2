@@ -11,20 +11,18 @@
 #include "sake_macro.h"
 
 static enum vsb2_error _create_framebuffers(struct vsb2_graphics_framebuffers *framebuffers, 
-                                            struct vsb2_graphics_window *window,
                                             struct vsb2_graphics_device *device,
                                             struct vsb2_graphics_swapchain *swapchain, 
                                             struct vsb2_graphics_renderpass *renderpass);
 
 enum vsb2_error vsb2_graphics_framebuffers_init(struct vsb2_graphics_framebuffers *framebuffers,
-                                       struct vsb2_graphics_window *window,
                                        struct vsb2_graphics_device *device,
                                        struct vsb2_graphics_swapchain *swapchain,
                                        struct vsb2_graphics_renderpass *renderpass)
 {
     enum vsb2_error status;
 
-    status = _create_framebuffers(framebuffers, window, device, swapchain, renderpass);
+    status = _create_framebuffers(framebuffers, device, swapchain, renderpass);
     if (status != VSB2_ERROR_NONE) {
         return status;
     }
@@ -45,7 +43,6 @@ void vsb2_graphics_framebuffers_destroy(struct vsb2_graphics_framebuffers *frame
 }
 
 static enum vsb2_error _create_framebuffers(struct vsb2_graphics_framebuffers *framebuffers, 
-                                            struct vsb2_graphics_window *window,
                                             struct vsb2_graphics_device *device,
                                             struct vsb2_graphics_swapchain *swapchain, 
                                             struct vsb2_graphics_renderpass *renderpass)
@@ -63,8 +60,8 @@ static enum vsb2_error _create_framebuffers(struct vsb2_graphics_framebuffers *f
         framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebuffer_info.renderPass = renderpass->vk_renderpass;
         framebuffer_info.attachmentCount = 1;
-        framebuffer_info.width = window->width;
-        framebuffer_info.height = window->height;
+        framebuffer_info.width = swapchain->vk_extent.width;
+        framebuffer_info.height = swapchain->vk_extent.height;
         framebuffer_info.layers = 1;
         framebuffer_info.pAttachments = &swapchain->vk_image_views[i];
         vkCreateFramebuffer(device->vk_device, &framebuffer_info, NULL, &framebuffers->vk_framebuffers[i]);

@@ -55,13 +55,13 @@ int main(void)
         }
     };
 
-    struct vsb2_engine engine = {0};
+    struct vsb2_engine engine = {0};    
 
     status = vsb2_engine_init(&engine, &info);
     if (status != VSB2_ERROR_NONE)
         goto cleanup;
 
-    status = vsb2_engine_run(&engine);
+    status = vsb2_engine_run(&engine, &info);
     if (status != VSB2_ERROR_NONE)
         goto cleanup;
 
