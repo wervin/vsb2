@@ -4,6 +4,15 @@ int main(void)
 {
     enum vsb2_error status = VSB2_ERROR_NONE;
 
+    struct vsb2_graphics_models_vertex2d vertices[] = {
+        {{1.f, 1.f}}, 
+        {{-1.f, -1.f}},
+        {{-1.f, 1.f}}, 
+        {{1.f, 1.f}}, 
+        {{-1.f, -1.f}},
+        {{1.f, -1.f}}
+    };
+
     struct vsb2_engine_info info = {
         .default_width = 800,
         .default_height = 600,
@@ -52,6 +61,13 @@ int main(void)
         },
         .frag_shader_info = {
             .path = "triangle.frag.spv"
+        },
+        .vertexbuffer_info = {
+            .data = vertices,
+            .memory_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            .vertex_count = sizeof(vertices) / sizeof(struct vsb2_graphics_models_vertex2d),
+            .vertex_size = sizeof(struct vsb2_graphics_models_vertex2d),
+            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
         }
     };
 

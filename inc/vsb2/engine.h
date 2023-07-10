@@ -16,6 +16,10 @@
 #include "vsb2/graphics/pipelinelayout.h"
 #include "vsb2/graphics/pipeline.h"
 
+#include "vsb2/graphics/buffers/vertexbuffer.h"
+
+#include "vsb2/graphics/models/vertex2d.h"
+
 struct vsb2_engine_info
 {
     uint32_t default_width;
@@ -42,6 +46,7 @@ struct vsb2_engine_info
     struct vsb2_graphics_renderpass_info renderpass_info;
     struct vsb2_graphics_shader_info vertex_shader_info;
     struct vsb2_graphics_shader_info frag_shader_info;
+    struct vsb2_graphics_buffers_vertexbuffer_info vertexbuffer_info;
 };
 
 struct vsb2_engine
@@ -62,6 +67,7 @@ struct vsb2_engine
     struct vsb2_graphics_shader frag_shader;
     struct vsb2_graphics_pipelinelayout pipelinelayout;
     struct vsb2_graphics_pipeline pipeline;
+    struct vsb2_graphics_buffers_vertexbuffer vertexbuffer;
 };
 
 enum vsb2_error vsb2_engine_init(struct vsb2_engine *engine, struct vsb2_engine_info *info);

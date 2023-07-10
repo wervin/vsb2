@@ -24,6 +24,7 @@ enum vsb2_error vsb2_engine_init(struct vsb2_engine *engine, struct vsb2_engine_
 void vsb2_engine_cleanup(struct vsb2_engine *engine)
 {
     vsb2_graphics_device_wait_idle(&engine->device);
+    vsb2_graphics_buffers_vertexbuffer_destroy(&engine->vertexbuffer, &engine->device);
     vsb2_graphics_shader_destroy(&engine->vertex_shader, &engine->device);
     vsb2_graphics_shader_destroy(&engine->frag_shader, &engine->device);
     vsb2_graphics_sync_destroy(&engine->sync, &engine->device);
@@ -129,9 +130,13 @@ static enum vsb2_error _draw(struct vsb2_engine *engine, struct vsb2_engine_info
     VkRect2D scissor = {0};
     scissor.offset = (VkOffset2D) {.x = 0, .y = 0};
     scissor.extent = engine->current_swapchain->vk_extent;
-    vkCmdSetScissor(engine->commandbuffer.vk_commandbuffer[current_frame_in_flight], 0, 1, &scissor);            
+    vkCmdSetScissor(engine->commandbuffer.vk_commandbuffer[current_frame_in_flight], 0, 1, &scissor);
 
-    vkCmdDraw(engine->commandbuffer.vk_commandbuffer[current_frame_in_flight], 3, 1, 0, 0);
+    VkBuffer vertex_buffers[] = {engine->vertexbuffer.vk_vertexbuffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(engine->commandbuffer.vk_commandbuffer[current_frame_in_flight], 0, 1, vertex_buffers, offsets);
+
+    vkCmdDraw(engine->commandbuffer.vk_commandbuffer[current_frame_in_flight], info->vertexbuffer_info.vertex_count, 1, 0, 0);
 
     vkCmdEndRenderPass(engine->commandbuffer.vk_commandbuffer[current_frame_in_flight]);
 
@@ -248,6 +253,10 @@ static enum vsb2_error _graphics_init(struct vsb2_engine *engine, struct vsb2_en
     if (status != VSB2_ERROR_NONE)
         return status;
 
+    status = vsb2_graphics_buffers_vertexbuffer_init(&engine->vertexbuffer, &engine->device, &info->vertexbuffer_info);
+    if (status != VSB2_ERROR_NONE)
+        return status;
+        
     return VSB2_ERROR_NONE;
 }
 

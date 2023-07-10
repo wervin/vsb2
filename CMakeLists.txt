@@ -31,6 +31,8 @@ if(NOT sake_POPULATED)
 endif()
 
 set(VSB2_SOURCES
+    src/vsb2/graphics/buffers/vertexbuffer.c
+    src/vsb2/graphics/models/vertex2d.c
     src/vsb2/graphics/commandbuffer.c
     src/vsb2/graphics/commandpool.c
     src/vsb2/graphics/device.c

@@ -5,6 +5,8 @@
 #include "vsb2/graphics/device.h"
 #include "vsb2/graphics/renderpass.h"
 
+#include "vsb2/graphics/models/vertex2d.h"
+
 #include "vsb2/log.h"
 
 enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipeline,
@@ -25,10 +27,13 @@ enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipel
     shader_stage_info[1].module = frag_shader->vk_shader_module;
     shader_stage_info[1].pName = "main";
 
+    struct vsb2_graphics_models_vertex2d_input vertex_input = vsb2_graphics_models_vertex2d_get_input();
     VkPipelineVertexInputStateCreateInfo vertex_input_info = {0};
     vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertex_input_info.vertexAttributeDescriptionCount = 0;
-    vertex_input_info.vertexBindingDescriptionCount = 0;
+    vertex_input_info.vertexBindingDescriptionCount = 1;
+    vertex_input_info.vertexAttributeDescriptionCount = 1;
+    vertex_input_info.pVertexBindingDescriptions = &vertex_input.binding;
+    vertex_input_info.pVertexAttributeDescriptions = vertex_input.attributes;
 
     VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {0};
     input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -41,18 +46,6 @@ enum vsb2_error vsb2_graphics_pipeline_init(struct vsb2_graphics_pipeline *pipel
     viewportstate_info.pViewports = NULL;
     viewportstate_info.scissorCount = 1;
     viewportstate_info.pScissors = NULL;
-
-    // VkViewport viewport = {0};
-    // viewport.x = 0.0f;
-    // viewport.y = 0.0f;
-    // viewport.width = (float) window->width;
-    // viewport.height = (float) window->height;
-    // viewport.minDepth = 0.0f;
-    // viewport.maxDepth = 1.0f;
-
-    // VkRect2D scissor = {0};
-    // scissor.offset = (VkOffset2D) { .x=0, .y=0 };
-    // scissor.extent = (VkExtent2D) { .height=window->height, .width=window->width };
 
     VkPipelineRasterizationStateCreateInfo rasterization_info = {0};
     rasterization_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
